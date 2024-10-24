@@ -1,5 +1,7 @@
 [![DOI](https://zenodo.org/badge/305723104.svg)](https://zenodo.org/badge/latestdoi/305723104)
 
+This is a fork of the vembrane workflow used to benchmark [vcfexpress](https://github.com/brentp/vcfexpress)
+
 # vembrane-benchmark
 This is a snakemake workflow for benchmarking different VCF filtering tools.
 It makes use of [GIAB](https://www.nist.gov/programs-projects/genome-bottle) samples `HG001`, `HG002`, `HG003` and `HG004` (see [Data sources](#data) below), [restricted to chromosome 1](https://github.com/vembrane/vembrane-benchmark/blob/503a49b46f78b5c0b2515bd6a3979b16dcbe01ba/workflow/rules/download.smk#L127-L139), [normalised with `bcftools norm -N -m-any`](https://github.com/vembrane/vembrane-benchmark/blob/503a49b46f78b5c0b2515bd6a3979b16dcbe01ba/workflow/rules/download.smk#L112-L124) and [annotated](https://github.com/vembrane/vembrane-benchmark/blob/v1.0.0/workflow/rules/annotation.smk) with [SnpEff](https://pcingola.github.io/SnpEff/se_introduction/) and [VEP](https://ensembl.org/info/docs/tools/vep/index.html).

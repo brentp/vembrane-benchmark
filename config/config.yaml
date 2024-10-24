@@ -1,5 +1,5 @@
 benchmark:
-  repeats: 10
+  repeats: 1
   tool:
     vembrane:
       annotations:
@@ -16,6 +16,20 @@ benchmark:
         - "vcf_v"
       invocation: vembrane filter '$FILTER'
 
+    vcfexpress:
+      annotations:
+        vep:
+          filter_all: 'return false'
+          filter_none: 'return true'
+          at_least_2_platforms: 'return variant:info("platforms") >= 2'
+          format_dp: 'any(function(dp) return dp > 1250 end, variant:format("DP"))'
+          uncertain: 'csqs = CSQS.new(variant:info("ANN"), desc); return csqs:any(function(c) return (c.CLIN_SIG or ""):find("uncertain_significance", 1, true) or not ((variant.id or ""):sub(1, 2) == "rs") end)'
+        snpeff:
+            impact_high: 'csqs = CSQS.new(variant:info("ANN"), desc); return csqs:any(function(c) return c["Annotation_Impact"] == "HIGH" end)'
+      filetypes:
+        - "bcf_b"
+        - "vcf_v"
+      invocation: vcfexpress filter -e '$FILTER' -p resources/vcfexpr-csq.lua -p resources/vcfexpr-pre.lua
 
     bcftools:
       annotations:
@@ -44,19 +58,6 @@ benchmark:
       filetypes:
         - "vcf_v"
       invocation: SnpSift filter "$FILTER"
-
-
-    filter_vep:
-      annotations:
-        vep:
-          filter_all: '0'
-          filter_none: 'not 0'
-          at_least_2_platforms: 'platforms >= 2'
-          uncertain: '(CLIN_SIG is uncertain_significance) or not (ID and ID matches "^rs")'
-        snpeff: {}
-      filetypes:
-        - "vcf_v"
-      invocation: filter_vep --vcf_info_field ANN --filter '$FILTER' -i
 
 
     bio-vcf:

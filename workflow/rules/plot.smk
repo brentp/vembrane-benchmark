@@ -3,7 +3,7 @@ rule plot:
         data="results/benchmark.tsv",
     output:
         html="results/plot/benchmark.html",
-        images=[report("results/plot/benchmark.svg")],
+        images=[report("results/plot/benchmark.svg"), report("results/plot/benchmark.pdf")],
     params:
         scenarios=SCENARIOS,
     log:

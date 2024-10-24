@@ -5,16 +5,20 @@ from plotly.subplots import make_subplots
 input_tsv = snakemake.input.data
 scenarios = snakemake.params.scenarios
 
+scenarios = [x for x in scenarios if x != "filter_all"]
+
 df = pd.read_csv(input_tsv, sep="\t")
 df["seconds_per_record"] = 1.0 / df["records_per_second"]
 df = df[df["scenario"].isin(scenarios)]
 
+df = df[df["tool"] != "bio-vcf"]
+
 non_plain_vcf = df.query(
-    "(tool == 'vembrane' | tool == 'bcftools' | tool == 'slivar') & filetype != 'vcf_v' & filetype != 'vcf_z'"
+    "(tool == 'vembrane' | tool == 'bcftools' | tool == 'slivar' | tool == 'vcfexpress') & filetype != 'vcf_v' & filetype != 'vcf_z'"
 )
 df = df.drop(non_plain_vcf.index)
 
-bcf_tools = ["vembrane", "bcftools", "slivar"]
+bcf_tools = ["vembrane", "vcfexpress", "bcftools", "slivar"]
 for tool in bcf_tools:
     non_plain_vcf.loc[
         non_plain_vcf.query(f"tool == '{tool}'").index, "tool"
@@ -27,22 +31,24 @@ tools = set(df["tool"])
 palette = [
     "#4477AA",  # bcftools (bcf);  blue
     "#7198bd",  # bcftools      ;  blue, s-20, v+7
+    "#AA3377",  # vcfexpr (bcf) ;  purple
+    '#97517C',
     "#EE6677",  # vembrane (bcf);  red
     "#ffa1ac",  # vembrane      ;  red,  s-20, v+7
     "#228833",  # SnpSift       ;  green
     "#CCBB44",  # bio-vcf       ;  yellow
     "#66CCEE",  # slivar (bcf)  ;  cyan
     "#a1e7ff",  # slivar        ;  cyan,  s-20, v+7
-    "#AA3377",  # filter_vep    ;  purple
 ]
 
-fig = px.violin(
+fig = px.strip(
     df,
     y="records_per_second",
     color="tool",
     # box=True,
     # points=False,
     facet_col="scenario",
+    facet_col_spacing=0.2,
     # facet_row="sample",
     template="plotly_white",
     color_discrete_sequence=palette,
@@ -50,13 +56,14 @@ fig = px.violin(
         "tool": [
             "bcftools (bcf)",
             "bcftools",
+            "vcfexpress (bcf)",
+            "vcfexpress",
             "vembrane (bcf)",
             "vembrane",
             "SnpSift",
             "bio-vcf",
             "slivar (bcf)",
             "slivar",
-            "filter_vep",
         ],
         "scenario": scenarios,
     },
@@ -66,6 +73,15 @@ fig = px.violin(
         "records_per_second": "records per second",
     },
     log_y=True,
+)
+
+# Get current font size and increase it by 8
+current_font_size = fig.layout.font.size
+new_font_size = current_font_size + 8 if current_font_size is not None else 18
+
+# Update font size
+fig.update_layout(
+    font=dict(size=new_font_size)
 )
 
 for tool in tools:
@@ -82,22 +98,23 @@ for tool in tools:
             selector=dict(name=tool),
         )
 
-fig.update_traces(spanmode="hard", selector=dict(type="violin"))
+fig.update_traces(spanmode="hard", selector=dict(type="strip"))
 fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[1]))
-fig.for_each_trace(
-    lambda t: t.update(
-        scalemode="width", scalegroup=f"{id(t)}", meanline=dict(visible=False)
-    )
-)
+#fig.for_each_trace(
+#    lambda t: t.update(
+#        scalemode="width", scalegroup=f"{id(t)}", meanline=dict(visible=False)
+#    )
+#)
 fig.update_xaxes(zeroline=True, showline=True, showgrid=False)
 fig.update_layout(
-    violingap=0.0,
-    violingroupgap=0.05,
+    boxgroupgap=0.15,
     boxgap=0.0,
-    boxgroupgap=0.1,
     margin=dict(l=0, r=0, t=20, b=0),
 )
 
+# Add thin lines between scenarios
+#for i in range(1, len(scenarios)):
+#    fig.add_vline(x=i - 0.5, line_width=1, line_color="lightgrey")
 
 # from https://github.com/plotly/plotly.py/issues/1930#issuecomment-645079975
 def modify_facet_spacing(fig, ncols, hs, vs):
@@ -160,8 +177,8 @@ def modify_facet_spacing(fig, ncols, hs, vs):
     fig.layout["annotations"] = fct_titles
 
 
-modify_facet_spacing(fig, len(scenarios), 0.015, 0)
+modify_facet_spacing(fig, len(scenarios), 0.05, 0)
 
 for img_path in snakemake.output.images:
-    fig.write_image(img_path, width=1000, height=400)
+    fig.write_image(img_path, width=1000, height=400, engine="kaleido")
 fig.write_html(snakemake.output.html)

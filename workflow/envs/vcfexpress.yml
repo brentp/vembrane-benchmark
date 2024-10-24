@@ -1,0 +1,8 @@
+name: vcfexpr
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - slivar ==0.2.7
+

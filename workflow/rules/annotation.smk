@@ -8,10 +8,14 @@ rule annotate_variants_snpeff:
         csvstats="results/snpeff/stats/{sample}_variants_snpeff.csv",  # summary statistics in CSV, optional
     log:
         "logs/snpeff/{sample}.log",
+    resources:
+        mem_mb=4000
+
     params:
-        extra="-Xmx4g",  # optional parameters (e.g., max memory 4g)
+       java_mem_overhead_mb=4000
+
     wrapper:
-        "v1.7.0/bio/snpeff/annotate"
+        "v3.13.3/bio/snpeff/annotate"
 
 
 rule snpeff_download:
@@ -22,7 +26,7 @@ rule snpeff_download:
     params:
         reference="GRCh38.86",
     wrapper:
-        "v1.7.0/bio/snpeff/download"
+        "v3.12.1/bio/snpeff/download"
 
 
 rule annotate_variants_vep:
@@ -40,7 +44,7 @@ rule annotate_variants_vep:
         "logs/vep/annotate_{sample}.log",
     threads: 4
     wrapper:
-        "v1.7.0/bio/vep/annotate"
+        "v3.12.1/bio/vep/annotate"
 
 
 rule download_vep_plugins:
@@ -51,7 +55,7 @@ rule download_vep_plugins:
     log:
         "logs/vep/download_vep_plugins.log",
     wrapper:
-        "v1.7.0/bio/vep/plugins"
+        "v3.12.1/bio/vep/plugins"
 
 
 rule get_vep_cache:
@@ -65,4 +69,4 @@ rule get_vep_cache:
         "logs/vep/cache.log",
     cache: True  # save space and time with between workflow caching (see docs)
     wrapper:
-        "v1.7.0/bio/vep/cache"
+        "v3.12.1/bio/vep/cache"
